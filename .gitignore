@@ -1,0 +1,42 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.venv/
+ENV/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Datasets (trop volumineux pour git)
+deepfashion2/
+dataset_yolo_dresscode/
+dataset_dresscode/
+fashion_mnist_data/
+
+# Modeles entraines
+*.pt
+*.pth
+runs/
+
+# Alertes et logs
+alerts/
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Env files
+.env
+.env.local
