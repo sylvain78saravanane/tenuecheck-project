@@ -1,0 +1,14 @@
+# TenueCheck Dataset - Configuration YOLOv8n
+# Categories: couvre_chef, crop_top, survetement
+
+path: C:\Users\user\Documents\Master\tenuecheck-project\dataset_tenuecheck
+train: images/train
+val: images/val
+test: images/test
+
+# Classes
+nc: 3
+names:
+  0: couvre_chef
+  1: crop_top
+  2: survetement

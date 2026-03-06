@@ -11,72 +11,24 @@ Modes de fonctionnement:
 import os
 import cv2
 import numpy as np
-import torch
-
-# Fix pour PyTorch 2.6+
-_original_torch_load = torch.load
-
-def _patched_torch_load(*args, **kwargs):
-    if 'weights_only' not in kwargs:
-        kwargs['weights_only'] = False
-    return _original_torch_load(*args, **kwargs)
-
-torch.load = _patched_torch_load
-
 from ultralytics import YOLO
 from datetime import datetime
 from config import (
     VETEMENTS_INTERDITS,
     DETECTION_CONFIG,
-    MESSAGES_ALERTE
 )
 
 
-# Classes du modele personnalise ENSITECH
+# Classes du modele personnalise ENSITECH (entraine sur Fashionpedia)
 DRESSCODE_CLASSES = [
-    "short",        # 0
-    "mini_skirt",   # 1
-    "crop_top",     # 2
-    "sportswear",   # 3
-    "ripped_jeans", # 4
-    "flip_flops",   # 5
-    "cap",          # 6
-    "hat",          # 7
-    "beanie",       # 8
-    "bandana",      # 9
+    "couvre_chef",   # 0
 ]
 
 # Noms d'affichage pour les classes
 DRESSCODE_DISPLAY_NAMES = {
-    "short": "Short/Bermuda",
-    "mini_skirt": "Mini-jupe",
-    "crop_top": "Crop top",
-    "sportswear": "Tenue de sport",
-    "ripped_jeans": "Jean troue",
-    "flip_flops": "Tongs/Sandales",
-    "cap": "Casquette",
-    "hat": "Chapeau",
-    "beanie": "Bonnet",
-    "bandana": "Bandana",
+    "couvre_chef": "Couvre-chef",
 }
 
-# Classes Fashion-MNIST (mode de secours)
-FASHION_LABELS = ["top", "trouser", "pullover", "dress", "coat",
-                  "sandal", "shirt", "sneaker", "bag", "ankle_boot"]
-
-# Mapping vers les vetements interdits
-FASHION_TO_DRESSCODE = {
-    "sandal": ("Sandales/Tongs", True),       # INTERDIT
-    "top": ("Top", False),                     # Autorise (sauf si court)
-    "dress": ("Robe", False),                  # Autorise (sauf si courte)
-    "trouser": ("Pantalon", False),            # Autorise
-    "pullover": ("Pull", False),               # Autorise
-    "coat": ("Manteau", False),                # Autorise
-    "shirt": ("Chemise", False),               # Autorise
-    "sneaker": ("Baskets", False),             # Autorise
-    "bag": ("Sac", False),                     # Autorise
-    "ankle_boot": ("Bottines", False),         # Autorise
-}
 
 
 class DressCodeDetector:
@@ -113,12 +65,6 @@ class DressCodeDetector:
             print("Modele personnalise non trouve. Utilisation du mode standard.")
             print("Pour entrainer le modele: python train_custom_yolo.py train")
 
-        # Charger le classificateur Fashion-MNIST si disponible (mode standard)
-        self.fashion_model = None
-        self.use_fashion_model = False
-        if not self.use_custom_model:
-            self._load_fashion_model()
-
         # Configuration
         self.alert_history = {}
         self.frame_count = 0
@@ -129,43 +75,17 @@ class DressCodeDetector:
         if self.use_custom_model:
             print("\n[MODE] Detection avec modele personnalise ENSITECH")
             print(f"Classes detectees: {DRESSCODE_CLASSES}")
-        elif self.use_fashion_model:
-            print("\n[MODE] Detection avec YOLO + Fashion-MNIST")
         else:
             print("\n[MODE] Detection avec YOLO + Analyse visuelle")
 
         print(f"Vetements interdits surveilles: {list(DRESSCODE_DISPLAY_NAMES.values())}")
-
-    def _load_fashion_model(self):
-        """Charge le modele Fashion-MNIST (PyTorch) si disponible"""
-        model_path = "fashion_classifier.pth"
-
-        if os.path.exists(model_path):
-            try:
-                from train_fashion_mnist import FashionCNN
-                print("Chargement du classificateur Fashion-MNIST...")
-
-                self.fashion_model = FashionCNN(num_classes=10)
-                checkpoint = torch.load(model_path, map_location='cpu', weights_only=False)
-                self.fashion_model.load_state_dict(checkpoint['model_state_dict'])
-                self.fashion_model.eval()
-                self.use_fashion_model = True
-                print("Classificateur Fashion-MNIST charge avec succes!")
-            except Exception as e:
-                print(f"Erreur chargement modele Fashion: {e}")
-                self.fashion_model = None
-                self.use_fashion_model = False
-        else:
-            print("Modele Fashion-MNIST non trouve.")
-            print("Pour l'entrainer: python train_fashion_mnist.py")
-            self.use_fashion_model = False
 
     def detect_with_custom_model(self, frame):
         """
         Detection avec le modele personnalise ENSITECH
         Detecte directement tous les vetements interdits
         """
-        results = self.dresscode_model(frame, conf=0.5, verbose=False)
+        results = self.dresscode_model(frame, conf=0.8, verbose=False)
         detections = []
 
         for result in results:
@@ -210,34 +130,6 @@ class DressCodeDetector:
 
         return persons
 
-    def _classify_clothing_region(self, region):
-        """
-        Classifie une region de vetement avec le modele Fashion-MNIST (PyTorch)
-        Retourne (classe, confiance) ou None si pas de modele
-        """
-        if not self.use_fashion_model or self.fashion_model is None:
-            return None
-
-        try:
-            # Preparer l'image pour Fashion-MNIST (28x28 grayscale)
-            gray = cv2.cvtColor(region, cv2.COLOR_BGR2GRAY)
-            resized = cv2.resize(gray, (28, 28))
-            normalized = resized.astype("float32") / 255.0
-
-            # Convertir en tensor PyTorch [1, 1, 28, 28]
-            input_tensor = torch.from_numpy(normalized).unsqueeze(0).unsqueeze(0)
-
-            # Predire
-            with torch.no_grad():
-                outputs = self.fashion_model(input_tensor)
-                probs = torch.softmax(outputs, dim=1)
-                confidence, pred_class = probs.max(1)
-
-            return (FASHION_LABELS[pred_class.item()], confidence.item())
-
-        except Exception:
-            return None
-
     def analyze_clothing(self, frame, person_bbox):
         """
         Analyse les vetements d'une personne detectee.
@@ -258,48 +150,15 @@ class DressCodeDetector:
         lower_region = person_roi[int(height*0.5):int(height*0.85), :]
         feet_region = person_roi[int(height*0.85):, :]
 
-        # === CLASSIFICATION AVEC FASHION-MNIST ===
-        if self.use_fashion_model:
-            # Classifier la zone des pieds (sandales/tongs)
-            if feet_region.size > 0 and feet_region.shape[0] > 10 and feet_region.shape[1] > 10:
-                feet_result = self._classify_clothing_region(feet_region)
-                if feet_result:
-                    label, conf = feet_result
-                    if label == "sandal" and conf > 0.6:
-                        violations.append(("Sandales/Tongs", conf))
-
-            # Classifier la zone du haut
-            if upper_region.size > 0 and upper_region.shape[0] > 10 and upper_region.shape[1] > 10:
-                upper_result = self._classify_clothing_region(upper_region)
-                if upper_result:
-                    label, conf = upper_result
-                    # Verifier si c'est un top court (crop top)
-                    if label == "top" and conf > 0.5:
-                        # Analyse supplementaire pour crop top
-                        crop_violations = self._detect_crop_top(upper_region)
-                        violations.extend(crop_violations)
-
-            # Classifier la zone du bas
-            if lower_region.size > 0 and lower_region.shape[0] > 10 and lower_region.shape[1] > 10:
-                lower_result = self._classify_clothing_region(lower_region)
-                if lower_result:
-                    label, conf = lower_result
-                    # Les robes courtes sont interdites
-                    if label == "dress" and conf > 0.5:
-                        # Verifier si la robe est courte
-                        short_violations = self._detect_short_dress(lower_region)
-                        violations.extend(short_violations)
-
-        # === ANALYSE VISUELLE (complement) ===
+        # === ANALYSE VISUELLE ===
 
         # Detection des couvre-chefs
         head_violations = self._detect_headwear(head_region)
         violations.extend(head_violations)
 
         # Detection crop top par analyse visuelle
-        if not self.use_fashion_model:
-            upper_violations = self._detect_upper_clothing(upper_region)
-            violations.extend(upper_violations)
+        upper_violations = self._detect_upper_clothing(upper_region)
+        violations.extend(upper_violations)
 
         # Detection short/mini-jupe
         lower_violations = self._detect_lower_clothing(lower_region)
@@ -309,10 +168,9 @@ class DressCodeDetector:
         jean_violations = self._detect_ripped_jeans(lower_region)
         violations.extend(jean_violations)
 
-        # Detection tongs par analyse visuelle (si pas de modele fashion)
-        if not self.use_fashion_model:
-            feet_violations = self._detect_sandals(feet_region)
-            violations.extend(feet_violations)
+        # Detection tongs par analyse visuelle
+        feet_violations = self._detect_sandals(feet_region)
+        violations.extend(feet_violations)
 
         return violations
 
@@ -553,9 +411,6 @@ class DressCodeDetector:
         if self.use_custom_model:
             cv2.putText(annotated_frame, "Mode: ENSITECH Custom YOLO",
                       (10, frame.shape[0] - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 1)
-        elif self.use_fashion_model:
-            cv2.putText(annotated_frame, "Mode: Fashion-MNIST + YOLO",
-                      (10, frame.shape[0] - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (200, 200, 200), 1)
         else:
             cv2.putText(annotated_frame, "Mode: YOLO + Analyse visuelle",
                       (10, frame.shape[0] - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (200, 200, 200), 1)
@@ -578,8 +433,8 @@ class DressCodeDetector:
             custom_detections = self.detect_with_custom_model(frame)
 
             for det in custom_detections:
-                # Seuil de confiance a 70%
-                if det["confidence"] >= 0.70:
+                # Seuil de confiance a 80%
+                if det["confidence"] >= 0.80:
                     new_detections.append({
                         "bbox": det["bbox"],
                         "violations_haute": [(det["display_name"], det["confidence"])],
