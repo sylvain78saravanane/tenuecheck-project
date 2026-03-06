@@ -1,18 +1,28 @@
-# ENSITECH - Système de Contrôle du Code Vestimentaire
+# ENSITECH - Système de Contrôle du Code Vestimentaire (TenueCheck)
 
 Système de détection automatique en temps réel des tenues non conformes au règlement intérieur d'ENSITECH (Article 17).
 
 ## Fonctionnalités
 
-- **Détection en temps réel** via webcam ou caméra de surveillance
+- **Détection en temps réel** via webcam ou caméra de surveillance.
 - **Vêtements interdits détectés** :
   - Bas : Short, Bermuda, Mini-jupe, Jean troué, Pantalon baggy
   - Hauts : Crop top, Brassière de sport, Tenue de sport
   - Chaussures : Tongs
   - Accessoires : Casquette, Chapeau, Bonnet, Bandana, Lunettes
-- **Alertes automatiques** avec capture d'image
-- **Interface web** moderne et responsive
-- **Envoi d'emails** aux responsables (configurable)
+- **Alertes automatiques** avec capture d'image stockées sur base de données (Supabase).
+- **Application Mobile** (React Native) pour la réception des alertes en temps réel par les agents.
+- **Interface web / API** pour l'administration.
+
+---
+
+## Architecture du Projet
+
+Le projet est divisé en deux parties principales pour séparer les responsabilités :
+
+tenuecheck-project/
+├── backend/            # L'IA (YOLO), OpenCV, et l'API Python/Flask
+└── mobile/             # L'Application Mobile React Native (Expo)
 
 ## Installation
 
