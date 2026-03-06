@@ -1,0 +1,30 @@
+# --- SYSTÈME & IDE ---
+.DS_Store
+Thumbs.db
+.vscode/
+*.pem
+*.swp
+
+# --- BACKEND (Python / IA) ---
+backend/venv/
+backend/__pycache__/
+backend/.env
+backend/alerts/
+*.pt
+*.pyc
+
+# --- MOBILE (React Native / Expo) ---
+mobile/node_modules/
+mobile/.expo/
+mobile/dist/
+mobile/web-build/
+mobile/expo-env.d.ts
+mobile/.env*
+mobile/ios/
+mobile/android/
+
+# --- LOGS & DEBUG ---
+npm-debug.*
+yarn-debug.*
+yarn-error.*
+.metro-health-check*
