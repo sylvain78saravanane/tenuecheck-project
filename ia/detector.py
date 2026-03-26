@@ -55,7 +55,7 @@ class DressCodeDetector:
         self.person_model = None
 
         # Essayer de charger le modele personnalise ENSITECH
-        custom_model_path = "dresscode_yolo.pt"
+        custom_model_path = os.path.join(os.path.dirname(os.path.abspath(__file__)),"dresscode_yolo.pt")
         if os.path.exists(custom_model_path):
             try:
                 print("Chargement du modele personnalise ENSITECH...")
