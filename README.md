@@ -14,10 +14,10 @@ Le modele `dresscode_yolo.pt` est un **YOLOv8n** (nano) entraine par transfer le
 
 | Metrique | Valeur |
 |----------|--------|
-| mAP50 | 0.823 |
-| mAP50-95 | 0.600 |
-| Precision | 0.709 |
-| Recall | 0.789 |
+| mAP50 | 0.887 |
+| mAP50-95 | 0.672 |
+| Precision | 0.776 |
+| Recall | 0.821 |
 
 ### Classe detectee
 
