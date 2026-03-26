@@ -8,7 +8,7 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from email.mime.image import MIMEImage
 from datetime import datetime
-from config import EMAIL_CONFIG, MESSAGES_ALERTE
+from core.config import EMAIL_CONFIG, MESSAGES_ALERTE
 
 
 class AlertSystem:

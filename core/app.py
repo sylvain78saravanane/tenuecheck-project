@@ -1,10 +1,10 @@
-"""
-Application Flask — ENSITECH TenueCheck
-Intégration Supabase (table alerts + Storage)
-Upload direct en mémoire — aucun fichier local créé
-Branche: dev-sylvain
-"""
 from __future__ import annotations
+
+import sys
+import os
+
+# Ajoute la racine du projet au path pour permettre les imports ia.* et core.*
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from flask import Flask, render_template, Response, jsonify
 import cv2
@@ -12,10 +12,10 @@ import threading
 from datetime import datetime, timezone
 import os
 
-from detector import DressCodeDetector
-from alert_system import AlertSystem
-from config import DETECTION_CONFIG, INTERFACE_CONFIG
-from supabase_client import get_supabase
+from ia.detector import DressCodeDetector
+from core.alert_system import AlertSystem
+from core.config import DETECTION_CONFIG, INTERFACE_CONFIG
+from core.supabase_client import get_supabase
 
 app = Flask(__name__)
 
@@ -269,7 +269,7 @@ def get_stats():
 
 @app.route("/api/config")
 def get_config():
-    from config import VETEMENTS_INTERDITS
+    from core.config import VETEMENTS_INTERDITS
     return jsonify({
         "vetements_interdits": list(set(VETEMENTS_INTERDITS.values())),
         "detection_config":    DETECTION_CONFIG,

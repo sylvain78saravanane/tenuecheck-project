@@ -10,10 +10,19 @@ Modes de fonctionnement:
 
 import os
 import cv2
+
+
+import sys
+import os
+
+# Ajoute la racine du projet au path
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+
 import numpy as np
 from ultralytics import YOLO
 from datetime import datetime
-from config import (
+from core.config import (
     VETEMENTS_INTERDITS,
     DETECTION_CONFIG,
 )
