@@ -20,10 +20,15 @@ deepfashion2/
 dataset_yolo_dresscode/
 dataset_dresscode/
 fashion_mnist_data/
+dataset_tenuecheck/
+dataset_couvre_chef/
+roboflow_downloads/
+test_results/
 
 # Modeles entraines
 *.pt
 *.pth
+!dresscode_yolo.pt
 runs/
 
 # Alertes et logs

@@ -1,60 +1,106 @@
-# ENSITECH - Système de Contrôle du Code Vestimentaire
+# TenueCheck - Systeme de Detection du Code Vestimentaire
 
-Système de détection automatique en temps réel des tenues non conformes au règlement intérieur d'ENSITECH (Article 17).
+Systeme de detection automatique en temps reel des tenues non conformes au reglement interieur d'ENSITECH (Article 17), base sur YOLOv8n et le transfer learning.
 
-## Fonctionnalités
+## Modele IA
 
-- **Détection en temps réel** via webcam ou caméra de surveillance
-- **Vêtements interdits détectés** :
-  - Bas : Short, Bermuda, Mini-jupe, Jean troué, Pantalon baggy
-  - Hauts : Crop top, Brassière de sport, Tenue de sport
-  - Chaussures : Tongs
-  - Accessoires : Casquette, Chapeau, Bonnet, Bandana, Lunettes
+Le modele `dresscode_yolo.pt` est un **YOLOv8n** (nano) entraine par transfer learning sur **10 155 images** provenant de :
+- **Fashionpedia** (5 000 images) — hat, headband, hood
+- **Roboflow - Cap Dataset** (3 321 images) — casquettes
+- **Roboflow - Headwear Detection** (1 164 images) — chapeaux, casquettes, hijab
+- **Roboflow - Cap Dataset PlayRoom** (670 images) — casquettes
+
+### Performances actuelles (couvre_chef)
+
+| Metrique | Valeur |
+|----------|--------|
+| mAP50 | 0.823 |
+| mAP50-95 | 0.600 |
+| Precision | 0.709 |
+| Recall | 0.789 |
+
+### Classe detectee
+
+| Classe | ID | Exemples |
+|--------|----|----|
+| couvre_chef | 0 | Casquette, bonnet, chapeau, capuche, bob, beret |
+
+### Entrainement
+
+- **Modele de base** : YOLOv8n pre-entraine sur COCO (transfer learning)
+- **GPU** : NVIDIA GeForce RTX 3070 (8 GB VRAM)
+- **Epochs** : 500 (early stopping patience 80)
+- **Batch** : 32
+- **Optimizer** : AdamW (lr=0.001, cos_lr)
+- **Augmentation** : mosaic, mixup, copy_paste, rotation, flip, HSV
+
+## Fonctionnalites
+
+- **Detection en temps reel** via webcam ou camera de surveillance
+- **Couvre-chefs detectes** : casquette, chapeau, bonnet, capuche, bandana
 - **Alertes automatiques** avec capture d'image
 - **Interface web** moderne et responsive
 - **Envoi d'emails** aux responsables (configurable)
 
 ## Installation
 
-### Prérequis
-- Python 3.8 ou supérieur
-- Webcam ou caméra IP
+### Prerequis
+- Python 3.8+
+- Webcam ou camera IP
+- GPU NVIDIA (recommande pour l'entrainement, pas necessaire pour l'inference)
 
 ### Installation rapide (Windows)
 ```batch
-# Double-cliquez sur run.bat
+run.bat
 ```
 
 ### Installation manuelle
 ```bash
-# Créer un environnement virtuel
-python -m venv venv
-
-# Activer l'environnement
-# Windows:
-venv\Scripts\activate
-# Linux/Mac:
-source venv/bin/activate
-
-# Installer les dépendances
 pip install -r requirements.txt
-
-# Lancer l'application
 python app.py
+```
+
+### Installation GPU (pour entrainement)
+```bash
+pip install torch torchvision --index-url https://download.pytorch.org/whl/cu128
+pip install -r requirements.txt
 ```
 
 ## Utilisation
 
-1. Lancez l'application avec `python app.py` ou `run.bat`
-2. Ouvrez votre navigateur à l'adresse : **http://localhost:5000**
-3. La détection démarre automatiquement avec la webcam
-4. Les violations sont affichées en temps réel avec un cadre rouge
-5. Les alertes sont enregistrées dans le dossier `alerts/`
+1. Lancez l'application : `python app.py` ou `run.bat`
+2. Ouvrez **http://localhost:5000**
+3. La detection demarre automatiquement avec la webcam
+4. Les violations sont affichees en temps reel avec un cadre rouge
+5. Les alertes sont enregistrees dans `alerts/`
+
+## Entrainer le modele
+
+Pour re-entrainer ou ameliorer le modele :
+
+```bash
+python download_roboflow_and_train.py
+```
+
+Ce script telecharge les datasets, les fusionne et lance l'entrainement. Le modele `dresscode_yolo.pt` est automatiquement mis a jour.
+
+Pour tester le modele :
+```bash
+python test_quick.py
+```
 
 ## Configuration
 
-### Paramètres email (config.py)
-Pour activer les alertes par email, modifiez `EMAIL_CONFIG` dans `config.py` :
+### Detection (config.py)
+```python
+DETECTION_CONFIG = {
+    "confidence_threshold": 0.5,
+    "frame_skip": 2,
+    "alert_cooldown": 30,
+}
+```
+
+### Email (config.py)
 ```python
 EMAIL_CONFIG = {
     "smtp_server": "smtp.gmail.com",
@@ -65,52 +111,49 @@ EMAIL_CONFIG = {
 }
 ```
 
-### Paramètres de détection (config.py)
-```python
-DETECTION_CONFIG = {
-    "confidence_threshold": 0.5,  # Seuil de confiance
-    "frame_skip": 2,              # Traiter 1 frame sur N
-    "alert_cooldown": 30,         # Délai entre alertes
-}
-```
-
 ## Structure du projet
 
 ```
-ensitech_dress_code/
-├── app.py              # Application Flask principale
-├── detector.py         # Module de détection YOLO
-├── alert_system.py     # Système d'alertes email
-├── config.py           # Configuration
-├── requirements.txt    # Dépendances Python
-├── run.bat            # Script de lancement Windows
+tenuecheck-project/
+├── app.py                          # Application Flask principale
+├── detector.py                     # Module de detection YOLO
+├── alert_system.py                 # Systeme d'alertes email
+├── config.py                       # Configuration
+├── dresscode_yolo.pt               # Modele entraine (YOLOv8n)
+├── requirements.txt                # Dependances Python
+├── run.bat                         # Script de lancement Windows
+├── download_roboflow_and_train.py  # Script d'entrainement complet
+├── test_quick.py                   # Test rapide du modele
 ├── templates/
-│   └── index.html     # Interface web
-├── static/            # Fichiers statiques
-└── alerts/            # Images des alertes
+│   └── index.html                  # Interface web
+├── dataset_couvre_chef/            # Dataset filtre (couvre_chef)
+├── roboflow_downloads/             # Datasets Roboflow telecharges
+├── runs/                           # Resultats d'entrainement YOLO
+└── alerts/                         # Images des alertes
 ```
 
 ## API REST
 
-| Endpoint | Méthode | Description |
+| Endpoint | Methode | Description |
 |----------|---------|-------------|
 | `/` | GET | Interface web principale |
-| `/video_feed` | GET | Flux vidéo MJPEG |
+| `/video_feed` | GET | Flux video MJPEG |
 | `/api/violations` | GET | Liste des violations |
-| `/api/toggle` | POST | Activer/désactiver la détection |
+| `/api/toggle` | POST | Activer/desactiver la detection |
 | `/api/capture` | POST | Capturer une image |
 | `/api/test_alert` | POST | Envoyer une alerte de test |
 
-## Technologies utilisées
+## Technologies
 
-- **YOLOv8** : Détection d'objets en temps réel
-- **OpenCV** : Traitement d'images
-- **Flask** : Serveur web
-- **Python** : Langage principal
+- **YOLOv8n** — Detection d'objets en temps reel (Ultralytics)
+- **PyTorch + CUDA** — Entrainement GPU
+- **OpenCV** — Traitement d'images
+- **Flask** — Serveur web
+- **Roboflow + HuggingFace** — Sources de datasets
 
 ## Auteurs
 
-Projet ENSITECH 2026 - Traitement d'image et détection de pattern
+Projet TenueCheck — ENSITECH Master 2, 2026
 
 ---
-*Conformément à l'Article 17 du règlement intérieur d'ENSITECH*
+*Conformement a l'Article 17 du reglement interieur d'ENSITECH*

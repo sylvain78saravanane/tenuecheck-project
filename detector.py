@@ -85,7 +85,7 @@ class DressCodeDetector:
         Detection avec le modele personnalise ENSITECH
         Detecte directement tous les vetements interdits
         """
-        results = self.dresscode_model(frame, conf=0.8, verbose=False)
+        results = self.dresscode_model(frame, conf=0.5, verbose=False)
         detections = []
 
         for result in results:
@@ -433,19 +433,12 @@ class DressCodeDetector:
             custom_detections = self.detect_with_custom_model(frame)
 
             for det in custom_detections:
-                # Seuil de confiance a 80%
-                if det["confidence"] >= 0.80:
-                    new_detections.append({
-                        "bbox": det["bbox"],
-                        "violations_haute": [(det["display_name"], det["confidence"])],
-                        "violations_basse": []
-                    })
-                else:
-                    new_detections.append({
-                        "bbox": det["bbox"],
-                        "violations_haute": [],
-                        "violations_basse": [(det["display_name"], det["confidence"])]
-                    })
+                # Toute detection = violation (le seuil est deja filtre par YOLO conf=0.3)
+                new_detections.append({
+                    "bbox": det["bbox"],
+                    "violations_haute": [(det["display_name"], det["confidence"])],
+                    "violations_basse": []
+                })
 
         # === MODE 2: Detection standard (YOLO personnes + analyse) ===
         else:
