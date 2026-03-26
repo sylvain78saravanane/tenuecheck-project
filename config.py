@@ -65,7 +65,7 @@ DETECTION_CONFIG = {
 # Configuration de l'interface
 INTERFACE_CONFIG = {
     "window_title": "ENSITECH - Contrôle Code Vestimentaire",
-    "camera_index": 1,  # Index de la caméra (0 = webcam par défaut, 1 = 2eme camera)
+    "camera_index": 0,  # Index de la caméra (0 = webcam par défaut, 1 = 2eme camera)
     "frame_width": 1280,
     "frame_height": 720
 }
