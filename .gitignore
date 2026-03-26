@@ -6,7 +6,7 @@ Thumbs.db
 *.swp
 
 # --- BACKEND (Python / IA) ---
-backend/venv/
+venv
 backend/__pycache__/
 backend/.env
 backend/alerts/

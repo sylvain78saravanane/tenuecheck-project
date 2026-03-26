@@ -119,9 +119,12 @@ ensitech_dress_code/
 - **Flask** : Serveur web
 - **Python** : Langage principal
 
+
+- **Supabase Storage** : (Bucket Name : violations-snapshots)
+- **Supabase Postgres** : (Pour le stockage des alertes/logs)
+
 ## Auteurs
 
 Projet ENSITECH 2026 - Traitement d'image et détection de pattern
 
 ---
-*Conformément à l'Article 17 du règlement intérieur d'ENSITECH*
