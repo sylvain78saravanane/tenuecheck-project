@@ -1,0 +1,18 @@
+[tool.ruff]
+# Vérifie uniquement le code backend
+include = ["core/**/*.py", "ia/**/*.py"]
+
+# Largeur max d'une ligne
+line-length = 120
+
+[tool.ruff.lint]
+# Règles activées : erreurs + imports + bonnes pratiques
+select = ["E", "F", "I", "W"]
+
+# On ignore ces règles pour pas bloquer inutilement
+ignore = [
+    "E501",   # ligne trop longue (on a déjà line-length à 120)
+    "F401",   # import non utilisé (parfois voulu dans __init__.py)
+    "E402",   # import pas en haut du fichier (nécessaire dans app.py avec sys.path)
+    "F841",   # variable assignée mais non utilisée (utilisé dans des appels avec side effects)
+]
