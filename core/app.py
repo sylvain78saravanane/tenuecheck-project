@@ -219,6 +219,36 @@ def toggle_detection():
     detection_active = not detection_active
     return jsonify({"active": detection_active})
 
+@app.route("/api/analyze", methods=["POST"])
+def analyze_image():
+    from flask import request
+    import numpy as np
+
+    if 'image' not in request.files:
+        return jsonify({'violations': [], 'status': 'Conforme'})
+
+    file = request.files['image']
+    img_array = np.frombuffer(file.read(), np.uint8)
+    frame = cv2.imdecode(img_array, cv2.IMREAD_COLOR)
+
+    if frame is None:
+        return jsonify({'violations': [], 'status': 'Conforme'})
+
+    # ← déstructurer le tuple (annotated_frame, violations)
+    _, violations = detector.process_frame(frame)
+
+    if violations:
+        storage_key = upload_frame_to_storage(frame, violations[0]["type"])
+        for v in violations:
+            persist_alert(v, storage_key)
+            storage_key = None  # une seule image pour le lot
+
+        return jsonify({
+            'violations': [{'type': v['type'], 'confidence': v['confidence']} for v in violations],
+            'status': 'Non conforme'
+        })
+
+    return jsonify({'violations': [], 'status': 'Conforme'})
 
 @app.route("/api/capture", methods=["POST"])
 def capture_image():

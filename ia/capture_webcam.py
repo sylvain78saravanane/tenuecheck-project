@@ -1,11 +1,3 @@
-"""
-Capture des images webcam pour ameliorer le dataset d'entrainement.
-- Appuie sur ESPACE pour capturer une image (avec couvre-chef)
-- Appuie sur 'n' pour capturer une image SANS couvre-chef (negative)
-- Appuie sur 'q' pour quitter
-Les images sont auto-annotees avec le modele actuel puis ajoutees au dataset.
-"""
-
 import cv2
 import os
 from pathlib import Path
